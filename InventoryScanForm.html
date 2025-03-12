@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Deployment Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script>
+        function submitForm() {
+            var employeeID = document.getElementById("employeeID").value;
+            var inventoryID = document.getElementById("inventoryID").value;
+            var statusElement = document.getElementById("status");
+            
+            if (!employeeID || !inventoryID) {
+                return;
+            }
+            
+            // Show loading message
+            statusElement.className = "";
+            statusElement.textContent = "Processing...";
+            statusElement.style.display = "block";
+            
+            var data = {
+                employee_id: employeeID,
+                inventory_id: inventoryID,
+                quantity_issued: 1,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Replace with your Google Apps Script Web App URL
+            var scriptURL = "https://script.google.com/macros/s/AKfycbx9ftVlc9XDKYpfMpE4JqSdU-36apakpT_1aC9tfRM4brTjj0wwS9-KXxVyJXCE3LhB/exec";
+            
+            fetch(scriptURL, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log("Success:", result);
+                
+                // Play success sound
+                document.getElementById("successSound").play();
+                
+                // Show success message
+                statusElement.className = "success";
+                statusElement.textContent = result.message || "Scan recorded successfully!";
+                
+                // Clear form fields
+                document.getElementById("employeeID").value = "";
+                document.getElementById("inventoryID").value = "";
+                document.getElementById("employeeID").focus();
+                
+                // Hide message after 3 seconds
+                setTimeout(() => {
+                    statusElement.style.display = "none";
+                }, 3000);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                
+                // Show error message
+                statusElement.className = "error";
+                statusElement.textContent = "Failed to submit. Check your connection.";
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    statusElement.style.display = "none";
+                }, 5000);
+            });
+        }
+        
+        // When page loads
+        window.addEventListener('load', function() {
+            // Focus on employee ID field
+            document.getElementById("employeeID").focus();
+            
+            // Check if sound file is accessible
+            var audio = document.getElementById("successSound");
+            audio.addEventListener('error', function() {
+                console.error("Error loading audio file");
+            });
+        });
+    </script>
+</head>
+<body>
+    <h2>Inventory Deployment Scanner</h2>
+    <form onsubmit="event.preventDefault(); submitForm();">
+        <label for="employeeID">Employee ID:</label>
+        <input type="text" id="employeeID" autofocus oninput="if(this.value.length > 0) document.getElementById('inventoryID').focus();">
+        
+        <label for="inventoryID">Inventory ID:</label>
+        <input type="text" id="inventoryID" oninput="if(this.value.length > 0) submitForm();">
+    </form>
+    
+    <div id="status" style="display: none;"></div>
+    <audio id="successSound" src="beep-07a.wav"></audio>
+</body>
+</html>
